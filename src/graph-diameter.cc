@@ -2,6 +2,7 @@
  * Computing graph diameter
  */
 
+#include <chrono>
 #include <err.h>
 #include <filesystem>
 #include <iostream>
@@ -18,10 +19,15 @@ int main(int argc, char* argv[])
         errx(1, "missing file name");
     }
     auto graph = nde::load(argv[1]);
+    std::cout << "Order: " << graph.order() << "\n";
 
     smart::Diameter diameter { graph.order() };
-    std::cout << "Order: " << graph.order() << "\n";
-    std::cout << "Diameter: " << diameter(graph) << "\n";
-    std::cout << "Radius: " << diameter.min_excentricity << "\n";
+
+    auto t0   = std::chrono::steady_clock::now();
+    auto diam = diameter(graph);
+    auto t1   = std::chrono::steady_clock::now();
+
+    std::cout << "Diameter: " << diam << "\n";
     std::cout << "Runs: " << diameter.runs << "\n";
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>((t1 - t0)).count() << "ms\n";
 }
