@@ -4,8 +4,8 @@
 
 #include <filesystem>
 #include <fstream>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include "graph.h"
 
@@ -30,16 +30,12 @@ Graph load(fs::path filename)
         graph.reserve_edges(v, d);
     }
     // Read edges
-    std::size_t v0{};
-    std::size_t v1{};
+    std::size_t v0 {};
+    std::size_t v1 {};
     while (input >> v0 >> v1) {
         graph.add_edge(v0, v1);
     }
     return graph;
 }
-
-#if 0
-void serialize(const Graph& graph, fs::path filename) {}
-#endif
 
 };
