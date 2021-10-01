@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <vector>
 
 class Graph
@@ -36,6 +37,13 @@ public:
     void reserve_edges(std::size_t v, std::size_t degree)
     {
         vertices_[v].reserve(degree);
+    }
+
+    void sort_successors()
+    {
+        for (auto& s : vertices_) {
+            std::sort(begin(s), end(s));
+        }
     }
 
 public:

@@ -35,6 +35,7 @@ Graph load(fs::path filename)
     while (input >> v0 >> v1) {
         graph.add_edge(v0, v1);
     }
+    graph.sort_successors();
     return graph;
 }
 

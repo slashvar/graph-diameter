@@ -2,7 +2,7 @@ Language: Cpp
 Standard: Cpp11
 BasedOnStyle: Mozilla
 IndentWidth: 4
-ColumnLimit: 120
+ColumnLimit: 115
 AlignConsecutiveDeclarations: true
 AlignConsecutiveAssignments: true
 BreakConstructorInitializers: AfterColon

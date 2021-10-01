@@ -15,29 +15,35 @@ namespace smart {
 
 struct Diameter
 {
+    void run(const Graph& graph, std::size_t v)
+    {
+        ++runs;
+        done[v] = true;
+        bfs.reset();
+        bfs(graph, v);
+        if (bfs.max_distance > max_excentricity) {
+            max_excentricity = bfs.max_distance;
+            last_change      = runs;
+            diam_vertex      = v;
+        }
+        min_excentricity = std::min(min_excentricity, bfs.max_distance);
+    }
 
     std::size_t operator()(const Graph& graph)
     {
         candidate.push_back(choose_source(graph));
+
         while (not candidate.empty() and not found()) {
             auto v = candidate.front();
             candidate.pop_front();
-            if (done[v]) {
-                continue;
-            }
-            done[v] = true;
-            bfs.reset();
-            bfs(graph, v);
-            max_excentricity = std::max(max_excentricity, bfs.max_distance);
-            min_excentricity = std::min(min_excentricity, bfs.max_distance);
-            ++runs;
-            if (not done[bfs.last] and bfs.dist[bfs.last] > threshold()) {
-                done[bfs.last] = true;
-                bfs.reset();
-                bfs(graph, bfs.last);
-                max_excentricity = std::max(max_excentricity, bfs.max_distance);
-                min_excentricity = std::min(min_excentricity, bfs.max_distance);
-                ++runs;
+            run(graph, v);
+
+            if (not done[bfs.last] and bfs.dist[bfs.last] > threshold() and bfs.dist[bfs.last] >= dist[bfs.last]) {
+                run(graph, bfs.last);
+                if (not done[bfs.last] and bfs.dist[bfs.last] > threshold()
+                    and bfs.dist[bfs.last] >= dist[bfs.last]) {
+                    run(graph, bfs.last);
+                }
             }
             populate();
         }
@@ -71,15 +77,18 @@ struct Diameter
 
     std::size_t choose_source(const Graph& g) const
     {
-        std::size_t d   = g[0].size();
-        std::size_t src = 0;
-        for (std::size_t v = 1; v < g.order(); ++v) {
-            if (g[v].size() < d) {
-                d   = g[v].size();
-                src = v;
+        if (source == order) {
+            std::size_t d   = g[0].size();
+            std::size_t src = 0;
+            for (std::size_t v = 1; v < g.order(); ++v) {
+                if (g[v].size() < d) {
+                    d   = g[v].size();
+                    src = v;
+                }
             }
+            return src;
         }
-        return src;
+        return source;
     }
 
     bool found() const
@@ -87,9 +96,11 @@ struct Diameter
         return max_excentricity >= min_excentricity * 2;
     }
 
-    Diameter(std::size_t o) noexcept :
-      done(o, false), scheduled(o, false), dist(o), bfs(o), order(o), min_excentricity(o)
+    Diameter(std::size_t o, std::size_t src) noexcept :
+      done(o, false), scheduled(o, false), dist(o), bfs(o), order(o), min_excentricity(o), source(src)
     {}
+
+    Diameter(std::size_t o) noexcept : Diameter(o, o) {}
 
     std::deque<std::size_t>  candidate;
     std::vector<bool>        done;
@@ -100,6 +111,9 @@ struct Diameter
     std::size_t              max_excentricity = 0;
     std::size_t              min_excentricity = 0;
     std::size_t              runs             = 0;
+    std::size_t              last_change      = 0;
+    std::size_t              diam_vertex      = 0;
+    std::size_t              source;
 };
 
 };

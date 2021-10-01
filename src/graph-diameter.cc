@@ -18,10 +18,11 @@ int main(int argc, char* argv[])
     if (argc < 2) {
         errx(1, "missing file name");
     }
+
     auto graph = nde::load(argv[1]);
     std::cout << "Order: " << graph.order() << "\n";
 
-    smart::Diameter diameter { graph.order() };
+    auto diameter = argc > 2 ? smart::Diameter(graph.order(), std::atoi(argv[2])) : smart::Diameter(graph.order());
 
     auto t0   = std::chrono::steady_clock::now();
     auto diam = diameter(graph);
@@ -29,5 +30,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Diameter: " << diam << "\n";
     std::cout << "Runs: " << diameter.runs << "\n";
+    std::cout << "Last change: " << diameter.last_change << "\n";
+    std::cout << "Diametral vertex: " << diameter.diam_vertex << "\n";
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>((t1 - t0)).count() << "ms\n";
 }
