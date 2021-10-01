@@ -1,0 +1,12 @@
+# Build dirs
+/buildir/
+/builddir/
+/build/
+/_build/
+
+# data
+/data/
+/prepared-graph/
+
+# Vim artefacts
+*.swp
