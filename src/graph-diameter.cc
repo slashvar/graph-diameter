@@ -7,8 +7,10 @@
 #include <iostream>
 
 #include "bfs.h"
+#include "full_diameter.h"
 #include "graph.h"
 #include "nde.h"
+#include "smart_diameter.h"
 
 int main(int argc, char* argv[])
 {
@@ -17,7 +19,9 @@ int main(int argc, char* argv[])
     }
     auto graph = nde::load(argv[1]);
 
-    BFS bfs(graph.order());
-    bfs(graph, 0);
-    std::cout << "Max distance: " << bfs.max_distance << "\n";
+    smart::Diameter diameter { graph.order() };
+    std::cout << "Order: " << graph.order() << "\n";
+    std::cout << "Diameter: " << diameter(graph) << "\n";
+    std::cout << "Radius: " << diameter.min_excentricity << "\n";
+    std::cout << "Runs: " << diameter.runs << "\n";
 }
