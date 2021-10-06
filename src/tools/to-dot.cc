@@ -9,7 +9,7 @@
 #include "graph.h"
 #include "nde.h"
 
-template<typename Stream>
+template <typename Stream>
 void to_dot(const Graph& graph, Stream& stream)
 {
     stream << "graph G  {\n";
@@ -24,7 +24,6 @@ void to_dot(const Graph& graph, Stream& stream)
 
     stream << "}\n";
 }
-
 
 int main(int argc, char* argv[])
 {

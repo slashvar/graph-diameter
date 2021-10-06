@@ -15,8 +15,28 @@
 #include "nde.h"
 #include "smart_diameter.h"
 
-int main(int argc, char* argv[])
+auto choose_start(const Graph& graph, auto&& cut_points)
 {
+    if (cut_points.empty()) {
+        std::size_t v = 0;
+        for (std::size_t i = 1; i < graph.order(); ++i) {
+            if (graph[i].size() > graph[v].size()) {
+                v = i;
+            }
+        }
+        return v;
+    }
+    auto v = *begin(cut_points);
+    for (auto&& i : cut_points) {
+        if (graph[i].size() < graph[v].size()) {
+            v = i;
+        }
+    }
+    return v;
+}
+
+int main(int argc, char* argv[])
+try {
     if (argc < 2) {
         errx(1, "missing file name");
     }
@@ -27,22 +47,22 @@ int main(int argc, char* argv[])
     // Compute cut-points
     Cut_points cut_points {};
     cut_points(graph);
+    std::cout << "Number of cut-points: " << cut_points.results.size() << "\n";
 
-    std::cout << "Cut points:";
-    for (auto&& v : cut_points.results) {
-        std::cout << " " << v;
-    }
-    std::cout << "\n";
+    auto start = choose_start(graph, cut_points.results);
+    std::cout << "Starting node: " << start << "\n";
 
-    auto diameter = argc > 2 ? smart::Diameter(graph.order(), std::atoi(argv[2])) : smart::Diameter(graph.order());
+    auto diameter = smart::Diameter(graph.order(), start);
 
     auto t0   = std::chrono::steady_clock::now();
     auto diam = diameter(graph);
     auto t1   = std::chrono::steady_clock::now();
 
     std::cout << "Diameter: " << diam << "\n";
-    std::cout << "Runs: " << diameter.runs << "\n";
+    std::cout << "Runs: " << diameter.runs << " (+1 DFS for cut points)\n";
     std::cout << "Last change: " << diameter.last_change << "\n";
     std::cout << "Diametral vertex: " << diameter.diam_vertex << "\n";
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>((t1 - t0)).count() << "ms\n";
+} catch (std::exception& e) {
+    errx(1, "%s", e.what());
 }

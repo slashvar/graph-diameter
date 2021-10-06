@@ -31,7 +31,9 @@ struct Diameter
 
     std::size_t operator()(const Graph& graph)
     {
-        candidate.push_back(choose_source(graph));
+        if (candidate.empty()) {
+            candidate.push_back(choose_source(graph));
+        }
 
         while (not candidate.empty() and not found()) {
             auto v = candidate.front();
@@ -94,6 +96,12 @@ struct Diameter
     bool found() const
     {
         return max_excentricity >= min_excentricity * 2;
+    }
+
+    template <typename Range>
+    void add_candidates(Range&& set)
+    {
+        candidate.insert(end(candidate), begin(set), end(set));
     }
 
     Diameter(std::size_t o, std::size_t src) noexcept :

@@ -12,38 +12,6 @@
 #include "graph.h"
 #include "nde.h"
 
-template <typename Container>
-std::size_t find(Container&& components, std::size_t v)
-{
-    size_t                   cur = v;
-    std::vector<std::size_t> queue;
-    while (components[cur] > 0) {
-        queue.push_back(cur);
-        cur = components[cur];
-    }
-    for (auto&& x : queue) {
-        components[x] = cur;
-    }
-    return cur;
-}
-
-template <typename Container>
-void unify(Container&& components, std::size_t v0, std::size_t v1)
-{
-    auto r0 = find(components, v0);
-    auto r1 = find(components, v1);
-    if (r0 != r1) {
-        if (components[r1] < components[r0]) {
-            components[r0] = r1;
-            return;
-        }
-        if (components[r0] == components[r1]) {
-            --components[r0];
-        }
-        components[r1] = r0;
-    }
-}
-
 struct BuildComponents
 {
     BuildComponents(std::size_t order) noexcept : bfs(order) {}
