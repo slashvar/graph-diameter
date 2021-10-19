@@ -9,5 +9,9 @@
 /prepared-graph/
 /dot/
 
+# meson subprojects
+/subprojects/*
+!/subprojects/*.wrap
+
 # Vim artefacts
 *.swp
