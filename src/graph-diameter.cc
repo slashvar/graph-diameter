@@ -8,6 +8,8 @@
 #include <iostream>
 #include <unordered_set>
 
+#include <cxxopts.hpp>
+
 #include "bfs.h"
 #include "cut-points.h"
 #include "full_diameter.h"
@@ -37,11 +39,23 @@ auto choose_start(const Graph& graph, auto&& cut_points)
 
 int main(int argc, char* argv[])
 try {
-    if (argc < 2) {
-        errx(1, "missing file name");
+
+    cxxopts::Options argParser(argv[0], "compute graph diameter");
+    argParser.positional_help("[filename]");
+    argParser.add_options()
+        ("filename", "path to graph file in NDE format", cxxopts::value<std::string>())
+        ("h,help", "print usage");
+    argParser.parse_positional({ "filename" });
+
+    auto options = argParser.parse(argc, argv);
+
+    if (options.count("help") or options.count("filename") == 0) {
+        errx(1, "%s", argParser.help().c_str());
     }
 
-    auto graph = nde::load(argv[1]);
+    fs::path filename = options["filename"].as<std::string>();
+
+    auto graph = nde::load(filename);
     std::cout << "Order: " << graph.order() << "\n";
 
     // Compute cut-points
