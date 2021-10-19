@@ -42,9 +42,12 @@ try {
 
     cxxopts::Options argParser(argv[0], "compute graph diameter");
     argParser.positional_help("[filename]");
+
+    // clang-format off
     argParser.add_options()
         ("filename", "path to graph file in NDE format", cxxopts::value<std::string>())
         ("h,help", "print usage");
+    // clang-format on
     argParser.parse_positional({ "filename" });
 
     auto options = argParser.parse(argc, argv);
