@@ -17,7 +17,7 @@ std::size_t full_diameter(const Graph& g)
     return d(g);
 }
 
-}; // namespace
+};  // namespace
 
 TEST(SmartDiameterTest, AgreesPath)
 {

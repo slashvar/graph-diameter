@@ -125,4 +125,4 @@ struct Diameter
     std::size_t              source;
 };
 
-};
+};  // namespace smart

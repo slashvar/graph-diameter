@@ -1,10 +1,11 @@
 #pragma once
 
+#include <unistd.h>
+
 #include <cstdlib>
 #include <filesystem>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 
 #include "graph.h"
 
@@ -93,4 +94,4 @@ struct TempNDEFile
     TempNDEFile& operator=(const TempNDEFile&) = delete;
 };
 
-};
+};  // namespace test_helpers

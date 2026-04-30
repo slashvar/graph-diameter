@@ -29,4 +29,4 @@ void serialize(const Graph& graph, Stream&& out)
         }
     }
 }
-};
+};  // namespace nde
