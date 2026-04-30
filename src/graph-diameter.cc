@@ -2,13 +2,13 @@
  * Computing graph diameter
  */
 
-#include <chrono>
 #include <err.h>
+
+#include <chrono>
+#include <cxxopts.hpp>
 #include <filesystem>
 #include <iostream>
 #include <unordered_set>
-
-#include <cxxopts.hpp>
 
 #include "bfs.h"
 #include "cut-points.h"
@@ -39,7 +39,6 @@ auto choose_start(const Graph& graph, auto&& cut_points)
 
 int main(int argc, char* argv[])
 try {
-
     cxxopts::Options argParser(argv[0], "compute graph diameter");
     argParser.positional_help("[filename]");
 
