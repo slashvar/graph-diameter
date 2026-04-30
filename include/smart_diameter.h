@@ -106,7 +106,8 @@ struct Diameter
 
     Diameter(std::size_t o, std::size_t src) noexcept :
       done(o, false), scheduled(o, false), dist(o), bfs(o), order(o), min_excentricity(o), source(src)
-    {}
+    {
+    }
 
     Diameter(std::size_t o) noexcept : Diameter(o, o) {}
 

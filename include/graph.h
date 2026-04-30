@@ -36,7 +36,9 @@ public:
 
     void reserve_edges(std::size_t v, std::size_t degree)
     {
-        vertices_[v].reserve(degree);
+        if (v < order()) {
+            vertices_[v].reserve(degree);
+        }
     }
 
     void sort_successors()

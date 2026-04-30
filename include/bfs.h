@@ -54,5 +54,5 @@ struct BFS
     std::vector<bool>        leaves;
     std::size_t              max_distance     = 0;
     std::size_t              visited_vertices = 0;
-    std::size_t              last;
+    std::size_t              last             = 0;
 };
