@@ -22,7 +22,7 @@ struct Diameter
             max_excentricity = std::max(max_excentricity, bfs.max_distance);
             min_excentricity = std::min(min_excentricity, bfs.max_distance);
             ++runs;
-            connected = bfs.visited_vertices == graph.order();
+            connected = connected and bfs.visited_vertices == graph.order();
         }
         return max_excentricity;
     }

@@ -70,8 +70,9 @@ struct Cut_points
                 stack.emplace_back(*next, -1, begin(graph[*next]));
             } else {
                 if (parents[v] == v) {
-                    ++root_children;
-                    results.insert(v);
+                    if (root_children >= 2) {
+                        results.insert(v);
+                    }
                     return;
                 }
                 stack.emplace_back(parents[v], highest[v], parents_iter[v]);
