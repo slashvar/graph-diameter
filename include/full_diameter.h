@@ -41,4 +41,4 @@ struct Diameter
     std::size_t runs             = 0;
     bool        connected        = true;
 };
-};
+};  // namespace full

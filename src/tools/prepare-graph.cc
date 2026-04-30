@@ -2,9 +2,10 @@
  * Prepare graph: isolate biggest connected components and rebuild graph from it
  */
 
+#include <err.h>
+
 #include <cassert>
 #include <deque>
-#include <err.h>
 #include <iostream>
 #include <vector>
 

@@ -46,4 +46,4 @@ Graph load(fs::path filename)
     return graph;
 }
 
-};
+};  // namespace nde
