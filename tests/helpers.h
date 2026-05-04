@@ -22,6 +22,19 @@ inline bool adj_equal(std::span<const std::size_t> adj, std::initializer_list<st
     return std::ranges::equal(adj, expected);
 }
 
+inline bool graphs_equal(const Graph& a, const Graph& b)
+{
+    if (a.order() != b.order()) {
+        return false;
+    }
+    for (std::size_t v = 0; v < a.order(); ++v) {
+        if (not std::ranges::equal(a[v], b[v])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 inline Graph make_path(std::size_t n)
 {
     Graph g(n);
