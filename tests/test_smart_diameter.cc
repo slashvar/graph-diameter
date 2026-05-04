@@ -13,8 +13,7 @@ namespace {
 
 std::size_t full_diameter(const Graph& g)
 {
-    full::Diameter<false> d;
-    return d(g);
+    return full::run(g).diameter;
 }
 
 };  // namespace
@@ -27,7 +26,7 @@ TEST(SmartDiameterTest, AgreesPath)
     auto            full_result  = full_diameter(g);
 
     EXPECT_EQ(smart_result, full_result);
-    EXPECT_LE(d.runs, 6u);
+    EXPECT_LE(d.runs, 6U);
 }
 
 TEST(SmartDiameterTest, AgreesK4)
@@ -36,7 +35,7 @@ TEST(SmartDiameterTest, AgreesK4)
     smart::Diameter d(4);
     auto            result = d(g);
     EXPECT_EQ(result, full_diameter(g));
-    EXPECT_EQ(result, 1u);
+    EXPECT_EQ(result, 1U);
 }
 
 TEST(SmartDiameterTest, AgreesStar)
