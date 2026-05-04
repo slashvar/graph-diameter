@@ -61,11 +61,11 @@ try {
     std::cout << "Order: " << graph.order() << "\n";
 
     // Compute cut-points
-    Cut_points cut_points {};
+    CutPoints cut_points;
     cut_points(graph);
-    std::cout << "Number of cut-points: " << cut_points.results.size() << "\n";
+    std::cout << "Number of cut-points: " << cut_points.articulation_points().size() << "\n";
 
-    auto start = choose_start(graph, cut_points.results);
+    auto start = choose_start(graph, cut_points.articulation_points());
     std::cout << "Starting node: " << start << "\n";
 
     auto diameter = smart::Diameter(graph.order(), start);
