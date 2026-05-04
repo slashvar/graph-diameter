@@ -19,11 +19,13 @@ struct BuildComponents
 
     auto operator()(const Graph& graph)
     {
+        std::size_t prev_total = 0;
         for (std::size_t v = 0; v < graph.order(); ++v) {
-            if (not bfs.closed[v]) {
-                bfs.visited_vertices = 0;
+            if (not bfs.was_closed(v)) {
                 bfs(graph, v);
-                components.emplace_back(v, bfs.visited_vertices);
+                const auto run_size = bfs.visited() - prev_total;
+                prev_total          = bfs.visited();
+                components.emplace_back(v, run_size);
             }
         }
         auto&& best = components.front();
