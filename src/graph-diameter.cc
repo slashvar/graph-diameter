@@ -2,44 +2,49 @@
  * Computing graph diameter
  */
 
-#include <err.h>
-
 #include <chrono>
+#include <cstddef>
+#include <cstdlib>
 #include <cxxopts.hpp>
+#include <exception>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <unordered_set>
 
-#include "bfs.h"
 #include "cut-points.h"
-#include "full_diameter.h"
 #include "graph.h"
 #include "nde.h"
 #include "smart_diameter.h"
 
-auto choose_start(const Graph& graph, auto&& cut_points)
+namespace {
+
+[[nodiscard]] std::size_t choose_start(const Graph& graph, const std::unordered_set<std::size_t>& cut_points)
 {
     if (cut_points.empty()) {
-        std::size_t v = 0;
-        for (std::size_t i = 1; i < graph.order(); ++i) {
-            if (graph[i].size() > graph[v].size()) {
-                v = i;
+        std::size_t best = 0;
+        for (std::size_t v = 1; v < graph.order(); ++v) {
+            if (graph[v].size() > graph[best].size()) {
+                best = v;
             }
         }
-        return v;
+        return best;
     }
-    auto v = *begin(cut_points);
-    for (auto&& i : cut_points) {
-        if (graph[i].size() < graph[v].size()) {
-            v = i;
+    auto best = *cut_points.begin();
+    for (auto v : cut_points) {
+        if (graph[v].size() < graph[best].size()) {
+            best = v;
         }
     }
-    return v;
+    return best;
 }
+
+};  // namespace
 
 int main(int argc, char* argv[])
 try {
-    cxxopts::Options argParser(argv[0], "compute graph diameter");
+    const std::span  args(argv, static_cast<std::size_t>(argc));
+    cxxopts::Options argParser(args[0], "compute graph diameter");
     argParser.positional_help("[filename]");
 
     // clang-format off
@@ -49,36 +54,39 @@ try {
     // clang-format on
     argParser.parse_positional({ "filename" });
 
-    auto options = argParser.parse(argc, argv);
+    const auto options = argParser.parse(argc, argv);
 
-    if (options.count("help") or options.count("filename") == 0) {
-        errx(1, "%s", argParser.help().c_str());
+    if (options.count("help") != 0 or options.count("filename") == 0) {
+        std::cerr << argParser.help();
+        return EXIT_FAILURE;
     }
 
-    fs::path filename = options["filename"].as<std::string>();
+    const fs::path filename = options["filename"].as<std::string>();
 
-    auto graph = nde::load(filename);
+    const auto graph = nde::load(filename);
     std::cout << "Order: " << graph.order() << "\n";
 
-    // Compute cut-points
     CutPoints cut_points;
     cut_points(graph);
     std::cout << "Number of cut-points: " << cut_points.articulation_points().size() << "\n";
 
-    auto start = choose_start(graph, cut_points.articulation_points());
+    const auto start = choose_start(graph, cut_points.articulation_points());
     std::cout << "Starting node: " << start << "\n";
 
     smart::Diameter solver(graph.order(), start);
 
-    auto t0     = std::chrono::steady_clock::now();
-    auto result = solver(graph);
-    auto t1     = std::chrono::steady_clock::now();
+    const auto t0     = std::chrono::steady_clock::now();
+    const auto result = solver(graph);
+    const auto t1     = std::chrono::steady_clock::now();
 
     std::cout << "Diameter: " << result.diameter << "\n";
     std::cout << "Runs: " << result.bfs_runs << " (+1 DFS for cut points)\n";
     std::cout << "Last change: " << result.last_change << "\n";
     std::cout << "Diametral vertex: " << result.diameter_vertex << "\n";
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>((t1 - t0)).count() << "ms\n";
-} catch (std::exception& e) {
-    errx(1, "%s", e.what());
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << "ms\n";
+
+    return EXIT_SUCCESS;
+} catch (const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    return EXIT_FAILURE;
 }

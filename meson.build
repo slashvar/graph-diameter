@@ -1,4 +1,8 @@
-project('graph-diameter', 'cpp', default_options: ['warning_level=3', 'cpp_std=c++20'])
+project(
+    'graph-diameter',
+    'cpp',
+    default_options: ['warning_level=3', 'cpp_std=c++20', 'werror=true'],
+)
 
 if get_option('extra_warnings')
   add_project_arguments(
@@ -15,7 +19,7 @@ if get_option('extra_warnings')
 endif
 
 cxxopts_proj = subproject('cxxopts')
-cxxopts_dep = cxxopts_proj.get_variable('cxxopts_dep')
+cxxopts_dep = cxxopts_proj.get_variable('cxxopts_dep').as_system('system')
 
 incdir = include_directories('include')
 
