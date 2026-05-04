@@ -1,14 +1,18 @@
 #include <gtest/gtest.h>
 
+#include <type_traits>
+
 #include "graph.h"
 #include "helpers.h"
+
+using test_helpers::adj_equal;
 
 TEST(GraphTest, OrderReset)
 {
     Graph g(5);
-    EXPECT_EQ(g.order(), 5u);
+    EXPECT_EQ(g.order(), 5U);
     g.reset(3);
-    EXPECT_EQ(g.order(), 3u);
+    EXPECT_EQ(g.order(), 3U);
     for (std::size_t v = 0; v < g.order(); ++v) {
         EXPECT_TRUE(g[v].empty());
     }
@@ -21,9 +25,9 @@ TEST(GraphTest, AddEdgeInBounds)
     g.add_edge(1, 2);
     g.sort_successors();
 
-    EXPECT_EQ(g[0], (std::vector<std::size_t> { 1 }));
-    EXPECT_EQ(g[1], (std::vector<std::size_t> { 0, 2 }));
-    EXPECT_EQ(g[2], (std::vector<std::size_t> { 1 }));
+    EXPECT_TRUE(adj_equal(g[0], { 1 }));
+    EXPECT_TRUE(adj_equal(g[1], { 0, 2 }));
+    EXPECT_TRUE(adj_equal(g[2], { 1 }));
 }
 
 TEST(GraphTest, AddEdgeOutOfBounds)
@@ -44,7 +48,7 @@ TEST(GraphTest, SortSuccessors)
     g.add_edge(0, 1);
     g.add_edge(0, 2);
     g.sort_successors();
-    EXPECT_EQ(g[0], (std::vector<std::size_t> { 1, 2, 3 }));
+    EXPECT_TRUE(adj_equal(g[0], { 1, 2, 3 }));
 }
 
 TEST(GraphTest, ReserveEdgesOutOfBoundsIsSafe)
@@ -55,3 +59,6 @@ TEST(GraphTest, ReserveEdgesOutOfBoundsIsSafe)
         EXPECT_TRUE(g[v].empty());
     }
 }
+
+static_assert(!std::is_convertible_v<std::size_t, Graph>,
+              "Graph(std::size_t) must be explicit to prevent implicit size-to-Graph conversions");

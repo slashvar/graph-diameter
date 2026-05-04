@@ -5,17 +5,22 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
+#include <span>
 #include <vector>
 
 class Graph
 {
 public:
-    std::size_t order() const
+    Graph() = default;
+    explicit Graph(std::size_t graph_order) : vertices_(graph_order) {}
+
+    [[nodiscard]] std::size_t order() const noexcept
     {
         return vertices_.size();
     }
 
-    const std::vector<std::size_t>& operator[](std::size_t v) const
+    [[nodiscard]] std::span<const std::size_t> operator[](std::size_t v) const noexcept
     {
         return vertices_[v];
     }
@@ -26,6 +31,9 @@ public:
         vertices_.resize(graph_order);
     }
 
+    // Silently drops out-of-range indices so callers (e.g. nde::load) can
+    // forward malformed input without preflight checks. reserve_edges below
+    // follows the same policy.
     void add_edge(std::size_t v0, std::size_t v1)
     {
         if (v0 < order() and v1 < order()) {
@@ -44,13 +52,9 @@ public:
     void sort_successors()
     {
         for (auto& s : vertices_) {
-            std::sort(begin(s), end(s));
+            std::ranges::sort(s);
         }
     }
-
-public:
-    Graph() = default;
-    Graph(std::size_t graph_order) : vertices_(graph_order) {}
 
 private:
     std::vector<std::vector<std::size_t>> vertices_;
