@@ -1,11 +1,13 @@
 /*
- * smart diamter: compute the diameter trying to skip useless nodes
+ * Smart diameter: compute the diameter trying to skip useless nodes.
  */
 
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <deque>
+#include <optional>
 #include <vector>
 
 #include "bfs.h"
@@ -13,119 +15,138 @@
 
 namespace smart {
 
-struct Diameter
+struct Result
 {
-    void run(const Graph& graph, std::size_t v)
+    std::size_t diameter;
+    std::size_t bfs_runs;
+    std::size_t diameter_vertex;
+    std::size_t last_change;  // run number at which the diameter last increased
+};
+
+class Diameter
+{
+public:
+    explicit Diameter(std::size_t order, std::optional<std::size_t> source = std::nullopt) :
+      done_(order, 0),
+      scheduled_(order, 0),
+      dist_(order),
+      bfs_(order),
+      order_(order),
+      min_excentricity_(order),
+      source_(source)
     {
-        ++runs;
-        done[v] = true;
-        bfs.reset();
-        bfs(graph, v);
-        if (bfs.max_distance() > max_excentricity) {
-            max_excentricity = bfs.max_distance();
-            last_change      = runs;
-            diam_vertex      = v;
-        }
-        min_excentricity = std::min(min_excentricity, bfs.max_distance());
     }
 
-    std::size_t operator()(const Graph& graph)
+    Result operator()(const Graph& graph)
     {
-        if (candidate.empty()) {
-            candidate.push_back(choose_source(graph));
+        if (order_ == 0) {
+            return { .diameter = 0, .bfs_runs = 0, .diameter_vertex = 0, .last_change = 0 };
         }
 
-        while (not candidate.empty() and not found()) {
-            auto v = candidate.front();
-            candidate.pop_front();
-            run(graph, v);
+        candidate_.push_back(source_.value_or(lowest_degree_vertex(graph)));
 
-            // Each run() resets BFS and reassigns bfs.last_visited(), so we re-read it
-            // (last2) after the first inner run rather than reusing `last`.
-            const auto last = bfs.last_visited();
-            if (not done[last] and bfs.distance(last) > threshold() and bfs.distance(last) >= dist[last]) {
-                run(graph, last);
-                const auto last2 = bfs.last_visited();
-                if (not done[last2] and bfs.distance(last2) > threshold() and bfs.distance(last2) >= dist[last2]) {
-                    run(graph, last2);
+        while (not candidate_.empty() and not found()) {
+            const auto v = candidate_.front();
+            candidate_.pop_front();
+            run_bfs(graph, v);
+
+            // After run_bfs, bfs_.last_visited() refers to the just-completed run.
+            // Re-read it (last2) after the inner run rather than reusing `last`.
+            const auto last = bfs_.last_visited();
+            if (worth_running(last)) {
+                run_bfs(graph, last);
+                const auto last2 = bfs_.last_visited();
+                if (worth_running(last2)) {
+                    run_bfs(graph, last2);
                 }
             }
             populate();
         }
-        return max_excentricity;
+
+        return {
+            .diameter        = max_excentricity_,
+            .bfs_runs        = runs_,
+            .diameter_vertex = diam_vertex_,
+            .last_change     = last_change_,
+        };
     }
 
-    std::size_t threshold() const
+private:
+    void run_bfs(const Graph& graph, std::size_t v)
     {
-        if (min_excentricity < max_excentricity) {
-            return min_excentricity + (max_excentricity - min_excentricity) / 2;
+        ++runs_;
+        done_[v] = 1;
+        bfs_.reset();
+        bfs_(graph, v);
+        if (bfs_.max_distance() > max_excentricity_) {
+            max_excentricity_ = bfs_.max_distance();
+            last_change_      = runs_;
+            diam_vertex_      = v;
         }
-        return max_excentricity / 2;
+        min_excentricity_ = std::min(min_excentricity_, bfs_.max_distance());
+    }
+
+    [[nodiscard]] bool worth_running(std::size_t v) const noexcept
+    {
+        return done_[v] == 0 and bfs_.distance(v) > threshold() and bfs_.distance(v) >= dist_[v];
+    }
+
+    [[nodiscard]] std::size_t threshold() const noexcept
+    {
+        if (min_excentricity_ < max_excentricity_) {
+            return min_excentricity_ + ((max_excentricity_ - min_excentricity_) / 2);
+        }
+        return max_excentricity_ / 2;
     }
 
     void populate()
     {
-        for (std::size_t v = 0; v < order; ++v) {
-            dist[v] = std::max(bfs.distance(v), dist[v]);
-            if (not done[v] and not scheduled[v] and bfs.is_leaf(v) and bfs.distance(v) > threshold()
-                and bfs.distance(v) >= dist[v]) {
-                scheduled[v] = true;
-                candidate.push_back(v);
+        for (std::size_t v = 0; v < order_; ++v) {
+            dist_[v] = std::max(bfs_.distance(v), dist_[v]);
+            if (done_[v] == 0 and scheduled_[v] == 0 and bfs_.is_leaf(v) and bfs_.distance(v) > threshold()
+                and bfs_.distance(v) >= dist_[v]) {
+                scheduled_[v] = 1;
+                candidate_.push_back(v);
             }
         }
-        auto eliminate = [this](auto v) {
-            done[v] = done[v] or not bfs.is_leaf(v);
-            return done[v];
+        const auto eliminate = [this](std::size_t v) {
+            const bool keep_eliminated = (done_[v] != 0) or not bfs_.is_leaf(v);
+            done_[v]                   = keep_eliminated ? char { 1 } : char { 0 };
+            return keep_eliminated;
         };
-        candidate.erase(std::remove_if(begin(candidate), end(candidate), eliminate), end(candidate));
+        candidate_.erase(std::ranges::remove_if(candidate_, eliminate).begin(), candidate_.end());
     }
 
-    std::size_t choose_source(const Graph& g) const
+    [[nodiscard]] static std::size_t lowest_degree_vertex(const Graph& graph)
     {
-        if (source == order) {
-            std::size_t d   = g[0].size();
-            std::size_t src = 0;
-            for (std::size_t v = 1; v < g.order(); ++v) {
-                if (g[v].size() < d) {
-                    d   = g[v].size();
-                    src = v;
-                }
+        std::size_t best_vertex = 0;
+        std::size_t best_degree = graph[0].size();
+        for (std::size_t v = 1; v < graph.order(); ++v) {
+            if (graph[v].size() < best_degree) {
+                best_degree = graph[v].size();
+                best_vertex = v;
             }
-            return src;
         }
-        return source;
+        return best_vertex;
     }
 
-    bool found() const
+    [[nodiscard]] bool found() const noexcept
     {
-        return max_excentricity >= min_excentricity * 2;
+        return max_excentricity_ >= min_excentricity_ * 2;
     }
 
-    template <typename Range>
-    void add_candidates(Range&& set)
-    {
-        candidate.insert(end(candidate), begin(set), end(set));
-    }
-
-    Diameter(std::size_t o, std::size_t src) noexcept :
-      done(o, false), scheduled(o, false), dist(o), bfs(o), order(o), min_excentricity(o), source(src)
-    {
-    }
-
-    Diameter(std::size_t o) noexcept : Diameter(o, o) {}
-
-    std::deque<std::size_t>  candidate;
-    std::vector<bool>        done;
-    std::vector<bool>        scheduled;
-    std::vector<std::size_t> dist;
-    BFS                      bfs;
-    std::size_t              order            = 0;
-    std::size_t              max_excentricity = 0;
-    std::size_t              min_excentricity = 0;
-    std::size_t              runs             = 0;
-    std::size_t              last_change      = 0;
-    std::size_t              diam_vertex      = 0;
-    std::size_t              source;
+    std::deque<std::size_t>    candidate_;
+    std::vector<char>          done_;
+    std::vector<char>          scheduled_;
+    std::vector<std::size_t>   dist_;
+    BFS                        bfs_;
+    std::size_t                order_;
+    std::size_t                max_excentricity_ = 0;
+    std::size_t                min_excentricity_;
+    std::size_t                runs_        = 0;
+    std::size_t                last_change_ = 0;
+    std::size_t                diam_vertex_ = 0;
+    std::optional<std::size_t> source_;
 };
 
 };  // namespace smart

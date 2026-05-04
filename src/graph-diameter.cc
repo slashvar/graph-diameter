@@ -68,16 +68,16 @@ try {
     auto start = choose_start(graph, cut_points.articulation_points());
     std::cout << "Starting node: " << start << "\n";
 
-    auto diameter = smart::Diameter(graph.order(), start);
+    smart::Diameter solver(graph.order(), start);
 
-    auto t0   = std::chrono::steady_clock::now();
-    auto diam = diameter(graph);
-    auto t1   = std::chrono::steady_clock::now();
+    auto t0     = std::chrono::steady_clock::now();
+    auto result = solver(graph);
+    auto t1     = std::chrono::steady_clock::now();
 
-    std::cout << "Diameter: " << diam << "\n";
-    std::cout << "Runs: " << diameter.runs << " (+1 DFS for cut points)\n";
-    std::cout << "Last change: " << diameter.last_change << "\n";
-    std::cout << "Diametral vertex: " << diameter.diam_vertex << "\n";
+    std::cout << "Diameter: " << result.diameter << "\n";
+    std::cout << "Runs: " << result.bfs_runs << " (+1 DFS for cut points)\n";
+    std::cout << "Last change: " << result.last_change << "\n";
+    std::cout << "Diametral vertex: " << result.diameter_vertex << "\n";
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>((t1 - t0)).count() << "ms\n";
 } catch (std::exception& e) {
     errx(1, "%s", e.what());
