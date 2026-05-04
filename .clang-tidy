@@ -1,0 +1,19 @@
+---
+Checks: >
+  bugprone-*,
+  cert-*,
+  -cert-err58-cpp,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  performance-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '(include|src|tests)/.*'
+FormatStyle: file
