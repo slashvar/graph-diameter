@@ -1,44 +1,59 @@
 /*
- * Full run diamter: compute the diameter by running BFS on all nodes
+ * Full-run diameter: runs BFS from every vertex and tracks both the
+ * diameter (max eccentricity) and, optionally, the radius (min
+ * eccentricity).
  */
 
 #pragma once
+
+#include <algorithm>
+#include <cstddef>
 
 #include "bfs.h"
 #include "graph.h"
 
 namespace full {
-template <bool WithRadius = false>
-struct Diameter
-{
-    std::size_t operator()(const Graph& graph)
-    {
-        min_excentricity = graph.order();
 
-        BFS bfs(graph.order());
-        for (std::size_t v = 0; not found() and v < graph.order(); ++v) {
-            bfs.reset();
-            bfs(graph, v);
-            max_excentricity = std::max(max_excentricity, bfs.max_distance());
-            min_excentricity = std::min(min_excentricity, bfs.max_distance());
-            ++runs;
-            connected = connected and bfs.visited() == graph.order();
-        }
-        return max_excentricity;
+struct Result
+{
+    std::size_t diameter;
+    std::size_t radius;
+    std::size_t bfs_runs;
+    bool        connected;
+};
+
+template <bool WithRadius = false>
+[[nodiscard]] Result run(const Graph& graph)
+{
+    const auto order = graph.order();
+    if (order == 0) {
+        return { .diameter = 0, .radius = 0, .bfs_runs = 0, .connected = true };
     }
 
-    bool found() const
-    {
+    std::size_t max_ecc   = 0;
+    std::size_t min_ecc   = order;
+    std::size_t bfs_runs  = 0;
+    bool        connected = true;
+
+    BFS  bfs(order);
+    auto found = [&] {
         if constexpr (WithRadius) {
-            return max_excentricity == min_excentricity * 2;
+            return max_ecc == min_ecc * 2;
         } else {
             return false;
         }
+    };
+
+    for (std::size_t v = 0; not found() and v < order; ++v) {
+        bfs.reset();
+        bfs(graph, v);
+        max_ecc   = std::max(max_ecc, bfs.max_distance());
+        min_ecc   = std::min(min_ecc, bfs.max_distance());
+        connected = connected and bfs.visited() == order;
+        ++bfs_runs;
     }
 
-    std::size_t max_excentricity = 0;
-    std::size_t min_excentricity = 0;
-    std::size_t runs             = 0;
-    bool        connected        = true;
-};
+    return { .diameter = max_ecc, .radius = min_ecc, .bfs_runs = bfs_runs, .connected = connected };
+}
+
 };  // namespace full
