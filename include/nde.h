@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <concepts>
+#include <cstddef>
 #include <filesystem>
+#include <iosfwd>
 
 #include "graph.h"
 
@@ -12,10 +15,17 @@ namespace fs = std::filesystem;
 
 namespace nde {
 
-Graph load(fs::path filename);
+template <typename T>
+concept output_stream = requires(T& t, std::size_t v, const char* s) {
+    t << v;
+    t << s;
+};
 
-template <typename Stream>
-void serialize(const Graph& graph, Stream&& out)
+[[nodiscard]] Graph load(std::istream& input);
+[[nodiscard]] Graph load(const fs::path& filename);
+
+template <output_stream Stream>
+void serialize(const Graph& graph, Stream& out)
 {
     out << graph.order() << "\n";
     for (std::size_t v = 0; v < graph.order(); ++v) {
@@ -29,4 +39,5 @@ void serialize(const Graph& graph, Stream&& out)
         }
     }
 }
+
 };  // namespace nde
