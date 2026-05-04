@@ -21,12 +21,12 @@ struct Diameter
         done[v] = true;
         bfs.reset();
         bfs(graph, v);
-        if (bfs.max_distance > max_excentricity) {
-            max_excentricity = bfs.max_distance;
+        if (bfs.max_distance() > max_excentricity) {
+            max_excentricity = bfs.max_distance();
             last_change      = runs;
             diam_vertex      = v;
         }
-        min_excentricity = std::min(min_excentricity, bfs.max_distance);
+        min_excentricity = std::min(min_excentricity, bfs.max_distance());
     }
 
     std::size_t operator()(const Graph& graph)
@@ -40,11 +40,14 @@ struct Diameter
             candidate.pop_front();
             run(graph, v);
 
-            if (not done[bfs.last] and bfs.dist[bfs.last] > threshold() and bfs.dist[bfs.last] >= dist[bfs.last]) {
-                run(graph, bfs.last);
-                if (not done[bfs.last] and bfs.dist[bfs.last] > threshold()
-                    and bfs.dist[bfs.last] >= dist[bfs.last]) {
-                    run(graph, bfs.last);
+            // Each run() resets BFS and reassigns bfs.last_visited(), so we re-read it
+            // (last2) after the first inner run rather than reusing `last`.
+            const auto last = bfs.last_visited();
+            if (not done[last] and bfs.distance(last) > threshold() and bfs.distance(last) >= dist[last]) {
+                run(graph, last);
+                const auto last2 = bfs.last_visited();
+                if (not done[last2] and bfs.distance(last2) > threshold() and bfs.distance(last2) >= dist[last2]) {
+                    run(graph, last2);
                 }
             }
             populate();
@@ -63,15 +66,15 @@ struct Diameter
     void populate()
     {
         for (std::size_t v = 0; v < order; ++v) {
-            dist[v] = std::max(bfs.dist[v], dist[v]);
-            if (not done[v] and not scheduled[v] and bfs.leaves[v] and bfs.dist[v] > threshold()
-                and bfs.dist[v] >= dist[v]) {
+            dist[v] = std::max(bfs.distance(v), dist[v]);
+            if (not done[v] and not scheduled[v] and bfs.is_leaf(v) and bfs.distance(v) > threshold()
+                and bfs.distance(v) >= dist[v]) {
                 scheduled[v] = true;
                 candidate.push_back(v);
             }
         }
-        auto eliminate = [&done = done, &leaves = this->bfs.leaves](auto v) {
-            done[v] = done[v] or not leaves[v];
+        auto eliminate = [this](auto v) {
+            done[v] = done[v] or not bfs.is_leaf(v);
             return done[v];
         };
         candidate.erase(std::remove_if(begin(candidate), end(candidate), eliminate), end(candidate));
