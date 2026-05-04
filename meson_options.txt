@@ -1,1 +1,2 @@
 option('tests', type: 'boolean', value: true, description: 'Build unit tests (gtest)')
+option('extra_warnings', type: 'boolean', value: true, description: 'Enable stricter compiler warnings (advisory, no -Werror)')
