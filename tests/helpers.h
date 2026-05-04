@@ -2,8 +2,12 @@
 
 #include <unistd.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <filesystem>
+#include <initializer_list>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -12,6 +16,11 @@
 namespace fs = std::filesystem;
 
 namespace test_helpers {
+
+inline bool adj_equal(std::span<const std::size_t> adj, std::initializer_list<std::size_t> expected)
+{
+    return std::ranges::equal(adj, expected);
+}
 
 inline Graph make_path(std::size_t n)
 {
@@ -92,6 +101,8 @@ struct TempNDEFile
 
     TempNDEFile(const TempNDEFile&)            = delete;
     TempNDEFile& operator=(const TempNDEFile&) = delete;
+    TempNDEFile(TempNDEFile&&)                 = delete;
+    TempNDEFile& operator=(TempNDEFile&&)      = delete;
 };
 
 };  // namespace test_helpers

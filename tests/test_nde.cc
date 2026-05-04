@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
@@ -20,7 +21,7 @@ TEST(NdeTest, LoadValidPath)
     Graph expected = make_path(3);
     ASSERT_EQ(g.order(), expected.order());
     for (std::size_t v = 0; v < g.order(); ++v) {
-        EXPECT_EQ(g[v], expected[v]);
+        EXPECT_TRUE(std::ranges::equal(g[v], expected[v]));
     }
 }
 
@@ -46,6 +47,6 @@ TEST(NdeTest, SerializeRoundtrip)
 
     ASSERT_EQ(loaded.order(), original.order());
     for (std::size_t v = 0; v < original.order(); ++v) {
-        EXPECT_EQ(loaded[v], original[v]);
+        EXPECT_TRUE(std::ranges::equal(loaded[v], original[v]));
     }
 }
